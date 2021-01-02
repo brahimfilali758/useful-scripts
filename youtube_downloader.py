@@ -12,46 +12,48 @@ import sys
 #TODO : (done) pass in the resolution (not necesseserly)
 
 #TODO : clean your code by making a class PlaylistDownloader
+#TODO : if the resolution is only 360p the download audio and video separeted and the merge them with ffmpeg
 
-def main(arg):
-    playlists_directory = '/home/brahim/Videos'
-    if len(arg) > 1 :
-        playlist_URL = arg[1]
-    else :
-        playlist_URL = 'https://www.youtube.com/watch?v=sWFAo_Qjm14&list=PLrAjkmIig4HSEVpMTe8GsKi2SWsUdRpAF'
-    if len(arg) > 2 :
-        resolution = arg[2]
-    else :
-        resolution = '480p'
 
-    playlist = Playlist(playlist_URL)
-    directory_path = os.path.join(playlists_directory , playlist.title)
+class PlaylistDownloader(Playlist):
 
-    print(directory_path)
 
-    # os.chdir(playlists_directory)
-
-    if not os.path.exists(directory_path) :
-        try:
-            os.mkdir(directory_path)
-        except OSError as e:
-            print(e)
-
-    print(playlist)
-    for video in playlist.videos :
-        print('info')
-        video_path = os.path.join(directory_path , video.title)
-        if not os.path.exists(video_path) :
-            # print(f'Downloading :  {video.title}')
-            # print(type(video.streams.filter(progressive=True).order_by('resolution').desc()))
-            [print(stream) for stream in video.streams.filter(progressive=True).order_by('resolution').desc()]
-
-            print('*******************************************')
-            # video.streams.filter(progressive=True).first().download(directory_path)
+    def __init__(self, playlist_URL ,playlists_directory_path=None , directory_name=None):
+        super().__init__(playlist_URL)
+        self.playlist_URL = playlist_URL
+        if playlists_directory_path :
+            self.playlists_directory_path = playlists_directory_path
         else :
-            print(f' === >  This file already exists : {video.title} ')
+            self.playlists_directory_path = '/home/brahim/Videos'
+        if directory_name :
+            self.directory_name = directory_name
+        else :
+            self.directory_name = self.title
+
+        print(f' the playlists path : {self.playlists_directory_path} the directory_name is {self.directory_name} ' )
+
+    def create_directory(self):
+        directory_path=os.path.join(self.playlists_directory_path,self.directory_name)
+        if not os.path.exists(directory_path):
+            try:
+                os.mkdir(directory_path)
+            except OSError as e:
+                print(e)
+
+
+    def download_playlist(self):
+        self.create_directory()
+        for video in self.videos:
+            video_path = os.path.join(self.playlists_directory_path,self.directory_name,video.title)
+            if not os.path.exists(video_path) :
+                print(f'Downloading :  {video.title}')
+                [print(stream) for stream in video.streams.filter(progressive=True).order_by('resolution').desc()]
+                # video.streams.filter(progressive=True).first().download(directory_path)
+            else :
+                print(f' === >  This file already exists : {video.title} ')
+
 
 
 if __name__ == '__main__' :
-    # print(sys.argv)
-    main(sys.argv)
+    playlist_downloader = PlaylistDownloader('https://www.youtube.com/watch?v=SlPhMPnQ58k&list=PL4o29bINVT4EG_y-k5jGoOu3-Am8Nvi10')
+    playlist_downloader.download_playlist()
